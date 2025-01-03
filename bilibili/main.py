@@ -16,14 +16,17 @@ def get_content(url: str) -> bytes:
 def bytes_to_image(bytes_data: bytes) -> Image:
     return Image.open(BytesIO(bytes_data))
 
+# 解析B站封面
 def pic_parse(url: str):
     img_url = client.tool.bili_pic_parse(url).execute().img_url
     return bytes_to_image(get_content(img_url))
 
+# 下载字幕
 def sub_download(url: str):
     sub_list = client.tool.bili_subtitle_download(url).execute().subtitle
     return [[sub.name, f"[点击下载]({sub.url})"] for sub in sub_list]
 
+# 下载弹幕
 def danmu_download(url: str, _format: str):
     danmu = client.tool.bili_danmu_download(url, _format).execute().danmu
     path = f"{uuid4()}.{_format}"
@@ -31,14 +34,16 @@ def danmu_download(url: str, _format: str):
         f.write(get_content(danmu))
     return path
 
+# 视频总结
 def video_summary(url: str):
     return client.tool.bili_video_summary(url).execute().text
 
+# 评论词云
 def comment_cloud(url: str):
     img_url = client.tool.bili_comment_cloud(url).execute().img_url
     return bytes_to_image(get_content(img_url))
 
-
+# 构建ui
 def ui_build():
     with gr.Blocks() as demo:
         demo.title = '智游剪辑-B站demo演示'
@@ -95,36 +100,6 @@ def ui_build():
         demo.launch()
 
 
-import signal
-import sys
-
-def signal_handler(sig, frame):
-    print("程序正在退出...")
-    # 在这里可以添加清理代码
-    client.close()
-    sys.exit(0)
-
-
-# 注册信号处理器
-signal.signal(signal.SIGINT, signal_handler)  # 捕获 Ctrl+C
-signal.signal(signal.SIGTERM, signal_handler)  # 捕获终止信号
-
 if __name__ == '__main__':
     ui_build()
-
-    # demo = gr.Interface(
-    #     title="智游剪辑-B站demo",
-    #     fn=submit_task,
-    #     inputs=[
-    #         gr.Text(label="视频链接", placeholder="输入B站视频链接"),
-    #         gr.Dropdown([
-    #             ("封面解析", 1),
-    #             ("字幕下载", 2),
-    #             ("弹幕下载", 3),
-    #             ("视频总结", 4),
-    #         ], label="下载内容")
-    #     ],
-    #     outputs=["text"],
-    # )
-
 
